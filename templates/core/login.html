@@ -1,0 +1,4 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>Owner login</h2><p>Use the demo owner account created by the seed script, or create a superuser with <code>python manage.py createsuperuser</code>.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Login</button></form>
+{% endblock %}

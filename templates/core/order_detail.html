@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>Bill — Order #{{ order.id }} · {{ r.name }}</h2>
+<p>Table: {% if order.table %}{{ order.table.number }}{% else %}—{% endif %} · Status: {{ order.status }} · {% if order.is_paid %}Paid ({{ order.payment_mode }}){% else %}Unpaid{% endif %}</p>
+<table class="table">{% for i in order.items.all %}<tr><td>{{ i.quantity }} × {{ i.menu_item.name }}</td><td>₹{{ i.line_total }}</td></tr>{% endfor %}
+<tr><td>Subtotal</td><td>₹{{ order.subtotal }}</td></tr><tr><td>GST (5%)</td><td>₹{{ order.gst }}</td></tr><tr><th>Total</th><th>₹{{ order.total }}</th></tr></table>
+{% if r.upi_id %}<p>Pay by UPI to: <b>{{ r.upi_id }}</b> (restaurant's own UPI ID — this system never holds customer money).</p>{% endif %}
+<form method="post" class="d-flex gap-2">{% csrf_token %}<select name="payment_mode"><option value="cash">Cash</option><option value="upi">UPI</option></select><button class="btn btn-success" name="pay" value="1">Mark paid & bill</button></form>
+<form method="post" class="mt-2">{% csrf_token %}<button class="btn btn-sm btn-secondary" name="status" value="served">Mark served</button> <button class="btn btn-sm btn-danger" name="status" value="cancelled">Cancel order</button></form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>{{ r.name }} — Kitchen display <small><a href="" class="btn btn-sm btn-outline-secondary">Refresh</a></small></h2>
+<h3>Live orders</h3>
+{% for o in active %}<div class="card"><div class="card-body"><h5>Order #{{ o.id }} · Table {% if o.table %}{{ o.table.number }}{% else %}—{% endif %} · {{ o.created_at|date:"H:i" }} · <span class="badge bg-warning text-dark">{{ o.status }}</span></h5>
+{% for i in o.items.all %}<div>{{ i.quantity }} × {{ i.menu_item.name }} — ₹{{ i.line_total }}{% if o.note %} <em>({{ o.note }})</em>{% endif %}</div>{% endfor %}
+<form method="post" class="mt-2">{% csrf_token %}<input type="hidden" name="order_id" value="{{ o.id }}">
+<button class="btn btn-sm btn-primary" name="status" value="accepted">Accept</button>
+<button class="btn btn-sm btn-primary" name="status" value="preparing">Preparing</button>
+<button class="btn btn-sm btn-success" name="status" value="ready">Ready</button>
+<button class="btn btn-sm btn-secondary" name="status" value="served">Served</button>
+<button class="btn btn-sm btn-danger" name="status" value="cancelled">Cancel</button></form></div></div>
+{% empty %}<p>No live orders.</p>{% endfor %}
+<h3 class="mt-4">Recently served / billed</h3>
+{% for o in done %}<div>Order #{{ o.id }} · {{ o.status }} · ₹{{ o.total }}</div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>{{ r.name }} — today</h2>
+<p>Orders today: <b>{{ count }}</b> · Paid sales today: <b>₹{{ sales }}</b> · Plan: {{ r.plan }}</p>
+<p><a class="btn btn-sm btn-primary" href="/dashboard/{{ r.slug }}/menu/">Menu</a> <a class="btn btn-sm btn-primary" href="/dashboard/{{ r.slug }}/tables/">Tables & QR</a> <a class="btn btn-sm btn-primary" href="/dashboard/{{ r.slug }}/kds/">Kitchen display</a> <a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/">Customer menu</a></p>
+<h3>Today's orders</h3>
+{% for o in orders %}<div class="card"><div class="card-body">Order #{{ o.id }} · Table {% if o.table %}{{ o.table.number }}{% else %}—{% endif %} · {{ o.status }} · ₹{{ o.total }} · {% if o.is_paid %}Paid ({{ o.payment_mode }}){% else %}Unpaid{% endif %} — <a href="/dashboard/{{ r.slug }}/orders/{{ o.id }}/">Open bill →</a></div></div>
+{% empty %}<p>No orders today yet.</p>{% endfor %}
+{% endblock %}

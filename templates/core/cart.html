@@ -1,0 +1,7 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>Your order — {{ r.name }}{% if table %} · Table {{ table.number }}{% endif %}</h2>
+{% if items %}<table class="table">{% for item, qty, total in items %}<tr><td>{{ qty }} × {{ item.name }}</td><td>₹{{ total }}</td></tr>{% endfor %}
+<tr><td>Subtotal</td><td>₹{{ subtotal }}</td></tr><tr><td>GST (5%)</td><td>₹{{ gst }}</td></tr><tr><th>Total</th><th>₹{{ total }}</th></tr></table>
+<form method="post">{% csrf_token %}<label>Note for kitchen (optional)</label><input type="text" name="note" placeholder="e.g. less spicy"><button class="btn btn-success mt-2">Place order</button></form>
+{% else %}<p>Your cart is empty. <a href="/r/{{ r.slug }}/{% if table %}?table={{ table.code }}{% endif %}">Back to menu →</a></p>{% endif %}
+{% endblock %}

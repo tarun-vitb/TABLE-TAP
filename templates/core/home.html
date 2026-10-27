@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}{% block content %}
+<h1>QR ordering for small restaurants</h1>
+<p class="lead">Customers scan a QR on their table, order from their phone, the kitchen sees it live, and the bill is ready at the table. No app to install, no hardware to buy.</p>
+<p><a class="btn btn-primary" href="/dashboard/">Owner dashboard</a> <a class="btn btn-outline-secondary" href="/login/">Login</a></p>
+<h2 class="mt-4">Demo restaurants</h2>
+{% for r in restaurants %}<div class="card"><div class="card-body"><h5>{{ r.name }}</h5><p>{{ r.city }} · Plan: {{ r.plan }}</p><a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/">Open customer menu →</a> <a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/">Owner view</a></div></div>
+{% empty %}<p>No restaurants yet. Log in and create one from the dashboard.</p>{% endfor %}
+<h3 class="mt-4">How it works</h3><ol><li>Owner adds menu + tables and prints one QR per table.</li><li>Customer scans, orders, and tracks the order.</li><li>Kitchen marks Preparing → Ready. Waiter serves.</li><li>Cashier bills Cash or UPI (the restaurant's own UPI ID).</li></ol>
+{% endblock %}

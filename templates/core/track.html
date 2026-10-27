@@ -1,0 +1,7 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>Order #{{ order.id }} — {{ order.status|title }}</h2>
+<p>{{ r.name }}{% if order.table %} · Table {{ order.table.number }}{% endif %}</p>
+{% for i in order.items.all %}<div>{{ i.quantity }} × {{ i.menu_item.name }} — ₹{{ i.line_total }}</div>{% endfor %}
+<p class="mt-3">Subtotal ₹{{ order.subtotal }} · GST ₹{{ order.gst }} · <b>Total ₹{{ order.total }}</b></p>
+<p><a href="" class="btn btn-outline-secondary">Refresh status</a> <a class="btn btn-primary" href="/r/{{ r.slug }}/">Order more →</a></p>
+{% endblock %}

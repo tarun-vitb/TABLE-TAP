@@ -1,0 +1,7 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>{{ r.name }}</h2><p>{{ r.address }} · {{ r.city }}{% if table %} · <b>Table {{ table.number }}</b>{% else %} · <span class="text-danger">No table selected — pick a table from the Tables page QR, or order without a table.</span>{% endif %}</p>
+<p><a class="btn btn-success" href="/r/{{ r.slug }}/cart/{% if table %}?table={{ table.code }}{% endif %}">View cart →</a></p>
+{% for c in categories %}<h3>{{ c.name }}</h3>
+{% for item in c.items.all %}{% if item.is_available %}<div class="card"><div class="card-body d-flex justify-content-between"><span><b>{{ item.name }}</b> · {% if item.is_veg %}🟢 Veg{% else %}🔴 Non-veg{% endif %}<br><small>{{ item.description }}</small></span><span>₹{{ item.price }}
+<form method="post" class="d-inline">{% csrf_token %}<input type="hidden" name="item_id" value="{{ item.id }}"><button class="btn btn-sm btn-primary" name="action" value="add">Add +</button></form></span></div></div>{% endif %}{% endfor %}{% endfor %}
+{% endblock %}

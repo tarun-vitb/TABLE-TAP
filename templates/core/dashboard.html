@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>Your restaurants</h2><p><a class="btn btn-primary" href="/dashboard/restaurant/new/">+ New restaurant</a></p>
+{% for r in restaurants %}<div class="card"><div class="card-body"><h5>{{ r.name }}</h5>
+<a class="btn btn-sm btn-primary" href="/dashboard/{{ r.slug }}/">Dashboard</a>
+<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/menu/">Menu</a>
+<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/tables/">Tables & QR</a>
+<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/kds/">Kitchen display</a>
+<a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/">Customer menu</a></div></div>
+{% empty %}<p>No restaurants yet — create your first one.</p>{% endfor %}
+{% endblock %}

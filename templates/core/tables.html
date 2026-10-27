@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}{% block content %}
+<h2>{{ r.name }} — Tables & QR codes</h2>
+<form method="post" class="mb-4">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Add table</button></form>
+<p>Print each QR and stick it on that table. Scanning it opens the menu for that table.</p>
+{% for t in r.tables.all %}<div class="card"><div class="card-body d-flex gap-3 align-items-center">
+<img src="/dashboard/{{ r.slug }}/tables/{{ t.id }}/qr.png" alt="QR for table {{ t.number }}" width="120" height="120">
+<div><h5>Table {{ t.number }}</h5><p>Menu link: /r/{{ r.slug }}/?table={{ t.code }}</p><a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/?table={{ t.code }}">Open as customer →</a></div></div></div>
+{% empty %}<p>No tables yet.</p>{% endfor %}
+{% endblock %}
