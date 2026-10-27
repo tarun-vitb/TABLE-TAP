@@ -48,14 +48,19 @@ def cart_view(request, slug):
         try: item = MenuItem.objects.get(id=item_id, restaurant=r)
         except MenuItem.DoesNotExist: continue
         items.append((item, qty, item.price * qty)); subtotal += item.price * qty
-    if request.method == "POST" and items:
-        order = Order.objects.create(restaurant=r, table=table, note=request.POST.get("note","")[:300])
-        for item, qty, _ in items:
-            OrderItem.objects.create(order=order, menu_item=item, quantity=qty, unit_price=item.price)
-        _save_cart(request, r, {})
-        return redirect(f"/r/{slug}/track/{order.id}/")
-    gst = round(float(subtotal) * 0.05, 2)
-    return render(request, "core/cart.html", {"r": r, "table": table, "items": items, "subtotal": subtotal, "gst": gst, "total": round(float(subtotal)+gst, 2)})
+    if request.method == "POST":
+        if "remove_item" in request.POST:
+            cart.pop(str(request.POST.get("remove_item")), None)
+            _save_cart(request, r, cart)
+            return redirect(f"/r/{slug}/cart/{'?table=' + code if code else ''}")
+        if items:
+            order = Order.objects.create(restaurant=r, table=table, note=request.POST.get("note","")[:300])
+            for item, qty, _ in items:
+                OrderItem.objects.create(order=order, menu_item=item, quantity=qty, unit_price=item.price)
+            _save_cart(request, r, {})
+            return redirect(f"/r/{slug}/track/{order.id}/")
+    gst = (subtotal * Decimal("0.05")).quantize(Decimal("0.01"))
+    return render(request, "core/cart.html", {"r": r, "table": table, "items": items, "subtotal": subtotal, "gst": gst, "total": subtotal + gst})
 
 def track_order(request, slug):
     r = get_object_or_404(Restaurant, slug=slug)
@@ -100,19 +105,26 @@ def restaurant_dashboard(request, slug):
 @login_required
 def menu_manage(request, slug):
     r = _owned(request, slug)
+    cat_form, item_form = CategoryForm(), MenuItemForm(restaurant=r)
     if request.method == "POST":
-        if "category" in request.POST:
-            form = CategoryForm(request.POST)
-            if form.is_valid():
-                obj = form.save(commit=False); obj.restaurant = r; obj.save(); return redirect("menu_manage", slug=slug)
+        # NOTE: do NOT branch on "category" here — MenuItemForm itself has a
+        # field named "category", so every item submission contains it and
+        # was previously misrouted into the category branch and silently
+        # dropped. Branch on the hidden submit markers instead.
+        if "add_category" in request.POST:
+            cat_form = CategoryForm(request.POST)
+            if cat_form.is_valid():
+                obj = cat_form.save(commit=False); obj.restaurant = r; obj.save(); return redirect("menu_manage", slug=slug)
+            messages.error(request, "Category could not be added. Check the name and sort order.")
         elif "toggle" in request.POST:
             item = get_object_or_404(MenuItem, id=request.POST.get("toggle"), restaurant=r)
             item.is_available = not item.is_available; item.save(); return redirect("menu_manage", slug=slug)
-        else:
-            form = MenuItemForm(request.POST, restaurant=r)
-            if form.is_valid():
-                obj = form.save(commit=False); obj.restaurant = r; obj.save(); return redirect("menu_manage", slug=slug)
-    return render(request, "core/menu_manage.html", {"r": r, "cat_form": CategoryForm(), "item_form": MenuItemForm(restaurant=r)})
+        elif "add_item" in request.POST:
+            item_form = MenuItemForm(request.POST, restaurant=r)
+            if item_form.is_valid():
+                obj = item_form.save(commit=False); obj.restaurant = r; obj.save(); return redirect("menu_manage", slug=slug)
+            messages.error(request, "Item could not be added. Check the category, name and price.")
+    return render(request, "core/menu_manage.html", {"r": r, "cat_form": cat_form, "item_form": item_form})
 
 @login_required
 def tables_manage(request, slug):
