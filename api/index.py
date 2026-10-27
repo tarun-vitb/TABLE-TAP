@@ -1,11 +1,12 @@
 """Vercel entrypoint for the TableTap Django app.
 
-Vercel runs this file as a serverless function. The deployment filesystem
-is read-only, so when VERCEL=1, settings.py points SQLite at /tmp and this
-module migrates + seeds the demo restaurant on each cold start.
-That makes the live link viewable and demoable, but orders placed on
-Vercel do NOT persist across cold starts or instances. For real use,
-replace SQLite with a hosted Postgres database.
+Vercel runs this file as a serverless function. On each cold start this
+module runs migrate (idempotent) and seeds the demo restaurant ONLY if
+no restaurant exists yet. With a shared Postgres DATABASE_URL / POSTGRES_URL
+(see qrtap/settings.py) that seed runs exactly once, and every instance
+shares the same data — so orders, table tokens and login sessions persist
+across cold starts and instances. Without a database URL the fallback is
+SQLite in /tmp, which is per-instance and NOT persistent (view-only mode).
 """
 import os
 import sys

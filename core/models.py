@@ -60,11 +60,15 @@ class Order(models.Model):
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     @property
-    def subtotal(self): return sum(i.line_total for i in self.items.all())
+    def subtotal(self):
+        from decimal import Decimal
+        return sum((i.line_total for i in self.items.all()), Decimal("0"))
     @property
-    def gst(self): return round(float(self.subtotal) * 0.05, 2)
+    def gst(self):
+        from decimal import Decimal
+        return (self.subtotal * Decimal("0.05")).quantize(Decimal("0.01"))
     @property
-    def total(self): return round(float(self.subtotal) + self.gst, 2)
+    def total(self): return self.subtotal + self.gst
     def __str__(self): return f"Order #{self.id} - {self.restaurant.name}"
 
 class OrderItem(models.Model):
@@ -73,4 +77,4 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default=1)
     unit_price = models.DecimalField(max_digits=8, decimal_places=2)
     @property
-    def line_total(self): return float(self.unit_price) * self.quantity
+    def line_total(self): return self.unit_price * self.quantity

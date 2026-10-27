@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}{% block content %}
 <h2>{{ r.name }} — Menu</h2>
-<div class="row"><div class="col-md-6"><h4>Add category</h4><form method="post">{% csrf_token %}<input type="hidden" name="category" value="1">{{ cat_form.as_p }}<button class="btn btn-primary">Add category</button></form></div>
-<div class="col-md-6"><h4>Add item</h4><form method="post">{% csrf_token %}{{ item_form.as_p }}<button class="btn btn-primary">Add item</button></form></div></div>
+<div class="row"><div class="col-md-6"><h4>Add category</h4><form method="post">{% csrf_token %}<input type="hidden" name="add_category" value="1">{{ cat_form.as_p }}<button class="btn btn-primary" name="add_category" value="1">Add category</button></form></div>
+<div class="col-md-6"><h4>Add item</h4><form method="post">{% csrf_token %}<input type="hidden" name="add_item" value="1">{{ item_form.as_p }}<button class="btn btn-primary" name="add_item" value="1">Add item</button></form></div></div>
 <hr>
 {% for c in r.categories.all %}<h4>{{ c.name }}</h4>
 {% for item in c.items.all %}<div class="card"><div class="card-body d-flex justify-content-between"><span>{{ item.name }} — ₹{{ item.price }} · {% if item.is_veg %}Veg{% else %}Non-veg{% endif %} · {% if item.is_available %}Available{% else %}Unavailable{% endif %}</span>
