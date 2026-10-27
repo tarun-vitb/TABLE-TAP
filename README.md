@@ -51,6 +51,21 @@ does not yet enforce paid subscriptions or trial expiry.
 Python, Django, SQLite, Bootstrap, qrcode + Pillow for QR images.
 Database tables: Restaurant, Table, Category, MenuItem, Order, OrderItem.
 
+## Deploy on Vercel (for teammates to view)
+Vercel files are included: `vercel.json` + `api/index.py`. Push them to
+GitHub first, then in Vercel: New Project → Import `tarun-vitb/TABLEE-TAP`
+→ Framework Preset: Other → Root Directory: ./ → Build Command:
+`python manage.py collectstatic --noinput` → Install Command:
+`pip install -r requirements.txt` → Environment Variables: `VERCEL=1`,
+`DJANGO_SECRET_KEY=<a fresh random key>`, `DJANGO_DEBUG=0` → Deploy.
+IMPORTANT LIMIT: Vercel's filesystem is read-only, so this deployment
+uses SQLite in /tmp and re-seeds the demo restaurant on each cold start.
+Orders on the live link do NOT persist across cold starts. Use the live
+link for viewing/demoing, and the local `runserver` demo for the actual
+evaluation. For real multi-user use, switch SQLite to a hosted Postgres
+database. If teammates see a Vercel login screen, turn off Deployment
+Protection in the Vercel project settings.
+
 ## Tonight: 5-member GitHub split (safe, low-risk commits)
 Lead: create a new GitHub repo, push this code as the first commit.
 Then each member forks the lead repo, makes ONE small change on a branch,
