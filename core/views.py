@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
@@ -10,7 +11,25 @@ from .models import Restaurant, Table, Category, MenuItem, Order, OrderItem
 from .forms import RestaurantForm, CategoryForm, MenuItemForm, TableForm
 
 def home(request):
-    return render(request, "core/home.html", {"restaurants": Restaurant.objects.all()[:12]})
+    restaurants = Restaurant.objects.all()[:12]
+    demo = restaurants[0] if restaurants else None
+    preview_items = demo.items.filter(is_available=True)[:3] if demo else []
+    return render(request, "core/home.html", {"restaurants": restaurants, "demo": demo, "preview_items": preview_items})
+
+def signup(request):
+    from .forms import OwnerSignupForm
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    if request.method == "POST":
+        form = OwnerSignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            messages.success(request, "Welcome to TableTap. Create your first restaurant to get its QR menu.")
+            return redirect("dashboard")
+    else:
+        form = OwnerSignupForm()
+    return render(request, "core/signup.html", {"form": form})
 
 def _cart(request, restaurant):
     return request.session.get(f"cart_{restaurant.id}", {})
@@ -19,11 +38,28 @@ def _save_cart(request, restaurant, cart):
     request.session[f"cart_{restaurant.id}"] = cart
     request.session.modified = True
 
+def _cart_totals(request, r):
+    """Cart state for the customer UI: per-item qty, count, total incl. GST."""
+    cart = _cart(request, r)
+    qty = {}
+    subtotal = Decimal("0")
+    for item_id, q in cart.items():
+        try: item = MenuItem.objects.get(id=item_id, restaurant=r)
+        except MenuItem.DoesNotExist: continue
+        qty[item.id] = q
+        subtotal += item.price * q
+    gst = (subtotal * Decimal("0.05")).quantize(Decimal("0.01"))
+    return qty, sum(qty.values()), subtotal + gst
+
 def public_menu(request, slug):
     r = get_object_or_404(Restaurant, slug=slug)
     table = None
     code = request.GET.get("table")
     if code: table = Table.objects.filter(restaurant=r, code=code).first()
+    # Search / Veg filter come from GET and are preserved across Add/Remove
+    # POSTs, so adding an item never resets the customer's view.
+    q = (request.GET.get("q") or "").strip()
+    veg_only = request.GET.get("veg") == "1"
     if request.method == "POST":
         cart = _cart(request, r)
         item_id = request.POST.get("item_id"); action = request.POST.get("action")
@@ -33,10 +69,40 @@ def public_menu(request, slug):
                 cart[item_id] = cart.get(item_id, 0) - 1
                 if cart[item_id] <= 0: cart.pop(item_id, None)
             _save_cart(request, r, cart)
-        return redirect(f"/r/{slug}/?table={code}" if code else f"/r/{slug}/")
-    categories = r.categories.prefetch_related("items").all()
-    cart = _cart(request, r)
-    return render(request, "core/public_menu.html", {"r": r, "table": table, "categories": categories, "cart": cart})
+        # Redirect back to the same item (anchor) with the same filters, so
+        # the customer sees the stepper change in place instead of a bare
+        # reload with no feedback. "added" drives the one-line toast.
+        params = []
+        if code: params.append(f"table={code}")
+        if q: params.append(f"q={q}")
+        if veg_only: params.append("veg=1")
+        if item_id and action == "add": params.append(f"added={item_id}")
+        qs = ("?" + "&".join(params)) if params else ""
+        anchor = f"#item-{item_id}" if item_id else ""
+        return redirect(f"/r/{slug}/{qs}{anchor}")
+    cart_qty, cart_count, cart_total = _cart_totals(request, r)
+    categories_data = []
+    for c in r.categories.prefetch_related("items").all():
+        items = []
+        for item in c.items.all():
+            if not item.is_available: continue
+            if veg_only and not item.is_veg: continue
+            if q and q.lower() not in item.name.lower() and q.lower() not in (item.description or "").lower(): continue
+            # Attach the session-cart quantity to the item so the template
+            # can render Add vs. stepper without a custom template filter.
+            item.cart_qty = cart_qty.get(item.id, 0)
+            items.append(item)
+        if items: categories_data.append((c, items))
+    added_name = None
+    added_id = request.GET.get("added")
+    if added_id:
+        added_item = MenuItem.objects.filter(id=added_id, restaurant=r).first()
+        if added_item: added_name = added_item.name
+    return render(request, "core/public_menu.html", {
+        "r": r, "table": table, "categories": categories_data, "cart": _cart(request, r),
+        "cart_qty": cart_qty, "cart_count": cart_count, "cart_total": cart_total,
+        "q": q, "veg_only": veg_only, "added_name": added_name, "table_code": code,
+    })
 
 def cart_view(request, slug):
     r = get_object_or_404(Restaurant, slug=slug)
@@ -53,6 +119,16 @@ def cart_view(request, slug):
             cart.pop(str(request.POST.get("remove_item")), None)
             _save_cart(request, r, cart)
             return redirect(f"/r/{slug}/cart/{'?table=' + code if code else ''}")
+        # Stepper on the cart page: same Add/Remove actions as the menu,
+        # so quantity is changed where the customer is looking at it.
+        if request.POST.get("item_id") and request.POST.get("action") in ("add", "remove"):
+            item_id = str(request.POST.get("item_id"))
+            if request.POST.get("action") == "add": cart[item_id] = cart.get(item_id, 0) + 1
+            else:
+                cart[item_id] = cart.get(item_id, 0) - 1
+                if cart[item_id] <= 0: cart.pop(item_id, None)
+            _save_cart(request, r, cart)
+            return redirect(f"/r/{slug}/cart/{'?table=' + code if code else ''}")
         if items:
             order = Order.objects.create(restaurant=r, table=table, note=request.POST.get("note","")[:300])
             for item, qty, _ in items:
@@ -60,7 +136,7 @@ def cart_view(request, slug):
             _save_cart(request, r, {})
             return redirect(f"/r/{slug}/track/{order.id}/")
     gst = (subtotal * Decimal("0.05")).quantize(Decimal("0.01"))
-    return render(request, "core/cart.html", {"r": r, "table": table, "items": items, "subtotal": subtotal, "gst": gst, "total": subtotal + gst})
+    return render(request, "core/cart.html", {"r": r, "table": table, "table_code": code, "items": items, "subtotal": subtotal, "gst": gst, "total": subtotal + gst})
 
 def track_order(request, slug):
     r = get_object_or_404(Restaurant, slug=slug)
@@ -120,7 +196,7 @@ def menu_manage(request, slug):
             item = get_object_or_404(MenuItem, id=request.POST.get("toggle"), restaurant=r)
             item.is_available = not item.is_available; item.save(); return redirect("menu_manage", slug=slug)
         elif "add_item" in request.POST:
-            item_form = MenuItemForm(request.POST, restaurant=r)
+            item_form = MenuItemForm(request.POST, request.FILES, restaurant=r)
             if item_form.is_valid():
                 obj = item_form.save(commit=False); obj.restaurant = r; obj.save(); return redirect("menu_manage", slug=slug)
             messages.error(request, "Item could not be added. Check the category, name and price.")

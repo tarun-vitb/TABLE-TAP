@@ -1,8 +1,28 @@
-{% extends "core/base.html" %}{% block content %}
-<h2>Order #{{ order.id }} — {{ order.status|title }}</h2>
-<p>{{ r.name }}{% if order.table %} · Table {{ order.table.number }}{% endif %}</p>
-{% if order.note %}<p>Kitchen note: <em>{{ order.note }}</em></p>{% endif %}
-{% for i in order.items.all %}<div>{{ i.quantity }} × {{ i.menu_item.name }} — ₹{{ i.line_total }}</div>{% endfor %}
-<p class="mt-3">Subtotal ₹{{ order.subtotal }} · GST ₹{{ order.gst }} · <b>Total ₹{{ order.total }}</b></p>
-<p><a href="" class="btn btn-outline-secondary">Refresh status</a> <a class="btn btn-primary" href="/r/{{ r.slug }}/">Order more →</a></p>
+{% extends "core/base.html" %}{% block title %}Order #{{ order.id }} — {{ r.name }}{% endblock %}
+{% block extra_head %}{% if order.status != "served" and order.status != "billed" and order.status != "cancelled" %}<meta http-equiv="refresh" content="30">{% endif %}{% endblock %}
+{% block content %}
+<div class="tt-page tt-page--no-bar">
+  <h1 class="tt-cart-title">Order #{{ order.id }}</h1>
+  <p class="text-muted">{{ r.name }}{% if order.table %} · Table {{ order.table.number }}{% endif %}</p>
+  {% if order.status == "billed" %}<p class="tt-banner">Billed{% if order.is_paid %} · Paid{% endif %}{% if order.payment_mode %} · {{ order.payment_mode|title }}{% endif %}</p>
+  {% elif order.status == "cancelled" %}<p class="tt-banner tt-banner--cancelled">This order was cancelled.</p>
+  {% else %}<p class="tt-banner">Status: {{ order.status|title }} · This page refreshes every 30 seconds.</p>{% endif %}
+
+  <ol class="tt-timeline">
+    <li class="{% if order.status != 'placed' %}is-done{% else %}is-current{% endif %}"><span class="tt-dot">{% if order.status != 'placed' %}✓{% endif %}</span><div><strong>Placed</strong><br><small class="text-muted">Your order reached the kitchen.</small></div></li>
+    <li class="{% if order.status == 'accepted' %}is-current{% elif order.status in 'preparing,ready,served,billed' %}is-done{% endif %}"><span class="tt-dot">{% if order.status in 'preparing,ready,served,billed' %}✓{% endif %}</span><div><strong>Accepted</strong><br><small class="text-muted">The kitchen confirmed your order.</small></div></li>
+    <li class="{% if order.status == 'preparing' %}is-current{% elif order.status in 'ready,served,billed' %}is-done{% endif %}"><span class="tt-dot">{% if order.status in 'ready,served,billed' %}✓{% endif %}</span><div><strong>Preparing</strong><br><small class="text-muted">Your food is being cooked.</small></div></li>
+    <li class="{% if order.status == 'ready' %}is-current{% elif order.status in 'served,billed' %}is-done{% endif %}"><span class="tt-dot">{% if order.status in 'served,billed' %}✓{% endif %}</span><div><strong>Ready</strong><br><small class="text-muted">Ready to be served at your table.</small></div></li>
+    <li class="{% if order.status == 'served' %}is-current{% elif order.status == 'billed' %}is-done{% endif %}"><span class="tt-dot">{% if order.status == 'billed' %}✓{% endif %}</span><div><strong>Served</strong><br><small class="text-muted">Enjoy your meal.</small></div></li>
+  </ol>
+
+  {% for i in order.items.all %}<div class="tt-cartline"><div class="tt-item-info"><h3 class="tt-item-name">{{ i.quantity }} × {{ i.menu_item.name }}</h3></div><div class="tt-line-total">₹{{ i.line_total }}</div></div>{% endfor %}
+  {% if order.note %}<p>Kitchen note: <em>{{ order.note }}</em></p>{% endif %}
+  <div class="tt-summary">
+    <div class="tt-summary-row"><span>Subtotal</span><span>₹{{ order.subtotal }}</span></div>
+    <div class="tt-summary-row"><span>GST (5%)</span><span>₹{{ order.gst }}</span></div>
+    <div class="tt-summary-row tt-summary-row--total"><span>Total</span><span>₹{{ order.total }}</span></div>
+  </div>
+  <p><a class="tt-back" href="/r/{{ r.slug }}/{% if order.table %}?table={{ order.table.code }}{% endif %}">Order more →</a> · <a href="">Refresh status</a></p>
+</div>
 {% endblock %}
