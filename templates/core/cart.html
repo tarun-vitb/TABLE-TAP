@@ -1,7 +1,42 @@
-{% extends "core/base.html" %}{% block content %}
-<h2>Your order — {{ r.name }}{% if table %} · Table {{ table.number }}{% endif %}</h2>
-{% if items %}<table class="table">{% for item, qty, total in items %}<tr><td>{{ qty }} × {{ item.name }}</td><td>₹{{ total }}</td><td><form method="post">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" name="remove_item" value="{{ item.id }}">Remove</button></form></td></tr>{% endfor %}
-<tr><td>Subtotal</td><td>₹{{ subtotal }}</td></tr><tr><td>GST (5%)</td><td>₹{{ gst }}</td></tr><tr><th>Total</th><th>₹{{ total }}</th></tr></table>
-<form method="post">{% csrf_token %}<label>Note for kitchen (optional)</label><input type="text" name="note" placeholder="e.g. less spicy"><button class="btn btn-success mt-2">Place order</button></form>
-{% else %}<p>Your cart is empty. <a href="/r/{{ r.slug }}/{% if table %}?table={{ table.code }}{% endif %}">Back to menu →</a></p>{% endif %}
+{% extends "core/base.html" %}{% block title %}Your order — {{ r.name }}{% endblock %}{% block content %}
+<div class="tt-page tt-page--no-bar">
+  <h1 class="tt-cart-title">Your order</h1>
+  <p class="text-muted">{{ r.name }}{% if table %} · Table {{ table.number }}{% endif %}</p>
+  {% if items %}
+    {% for item, qty, total in items %}
+    <div class="tt-cartline">
+      {% if item.image %}<img class="ow-thumb" src="{{ item.image.url }}" alt="{{ item.name }}">{% endif %}
+      <div class="tt-item-info">
+        <div class="tt-vegline"><span class="tt-vegdot{% if not item.is_veg %} tt-vegdot--nonveg{% endif %}" aria-hidden="true"></span>{% if item.is_veg %}Veg{% else %}Non-veg{% endif %}</div>
+        <h3 class="tt-item-name">{{ item.name }}</h3>
+        <p class="tt-line-total">₹{{ total }}</p>
+        <form method="post" class="mt-2">{% csrf_token %}<button class="tt-remove" type="submit" name="remove_item" value="{{ item.id }}">Remove item</button></form>
+      </div>
+      <div class="tt-item-action">
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="item_id" value="{{ item.id }}">
+          <span class="tt-stepper">
+            <button type="submit" name="action" value="remove" aria-label="Remove one {{ item.name }}">−</button>
+            <strong>{{ qty }}</strong>
+            <button type="submit" name="action" value="add" aria-label="Add one {{ item.name }}">+</button>
+          </span>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="tt-summary">
+      <div class="tt-summary-row"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+      <div class="tt-summary-row"><span>GST (5%)</span><span>₹{{ gst }}</span></div>
+      <div class="tt-summary-row tt-summary-row--total"><span>Total</span><span>₹{{ total }}</span></div>
+    </div>
+    <form method="post">{% csrf_token %}
+      <label class="tt-note-label" for="tt-note">Note for kitchen (optional)</label>
+      <input id="tt-note" type="text" name="note" placeholder="e.g. less spicy" maxlength="300">
+      <button class="tt-place" type="submit">Place order · ₹{{ total }}</button>
+    </form>
+  {% else %}
+    <div class="tt-empty"><p>Your cart is empty.</p></div>
+  {% endif %}
+  <a class="tt-back" href="/r/{{ r.slug }}/{% if table_code %}?table={{ table_code }}{% endif %}">← Back to menu</a>
+</div>
 {% endblock %}

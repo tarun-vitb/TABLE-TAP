@@ -1,9 +1,74 @@
-{% extends "core/base.html" %}{% block content %}
-<h1>QR ordering for small restaurants</h1>
-<p class="lead">Customers scan a QR on their table, order from their phone, the kitchen sees it live, and the bill is ready at the table. No app to install, no hardware to buy.</p>
-<p><a class="btn btn-primary" href="/dashboard/">Owner dashboard</a> <a class="btn btn-outline-secondary" href="/login/">Login</a></p>
-<h2 class="mt-4">Demo restaurants</h2>
-{% for r in restaurants %}<div class="card"><div class="card-body"><h5>{{ r.name }}</h5><p>{{ r.city }} · Plan: {{ r.plan }}</p><a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/">Open customer menu →</a> <a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/">Owner view</a></div></div>
-{% empty %}<p>No restaurants yet. Log in and create one from the dashboard.</p>{% endfor %}
-<h3 class="mt-4">How it works</h3><ol><li>Owner adds menu + tables and prints one QR per table.</li><li>Customer scans, orders, and tracks the order.</li><li>Kitchen marks Preparing → Ready. Waiter serves.</li><li>Cashier bills Cash or UPI (the restaurant's own UPI ID).</li></ol>
+{% extends "core/base.html" %}{% block title %}TableTap — QR ordering for small restaurants{% endblock %}{% block content %}
+<section class="lp-fullbleed lp-hero">
+<div>
+<p class="lp-eyebrow">For cafes and small restaurants</p>
+<h1>Your menu, on the table, in one scan.</h1>
+<p>Customers scan the QR on their table, order from their phone, and the kitchen sees it live. No app to install, no login for customers, no commission on dine-in orders in the MVP.</p>
+<div class="lp-cta-row">
+<a class="tt-btn" href="/signup/">Start free — 14-day trial</a>
+{% if demo %}<a class="tt-btn tt-btn--outline" href="/r/{{ demo.slug }}/">See the demo menu</a>{% endif %}
+</div>
+<p class="lp-note">Owners: log in or sign up from the top of this page. Customers never pay TableTap — they pay your restaurant, by UPI or cash.</p>
+</div>
+<div class="lp-mock reveal">
+<div class="lp-mock-head"><strong>{% if demo %}{{ demo.name }}{% else %}Your restaurant{% endif %}</strong><span class="tt-chip tt-chip--table">Dine-in · Table 1</span></div>
+{% for item in preview_items %}<div class="lp-mock-row">
+<span class="lp-mock-thumb">{% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}{{ item.name|first }}{% endif %}</span>
+<span><b>{{ item.name }}</b><span>{% if item.is_veg %}Veg{% else %}Non-veg{% endif %}</span></span>
+<span class="lp-mock-price">₹{{ item.price }}</span>
+</div>{% empty %}<div class="lp-mock-row"><span class="lp-mock-thumb">T</span><span><b>Veg Manchuria</b><span>Veg · demo preview</span></span><span class="lp-mock-price">₹120</span></div>{% endfor %}
+<div class="lp-mock-bar"><span>1 item · View cart</span><span>₹120 →</span></div>
+<p class="lp-note" style="margin-bottom:0">Demo preview. Photos above are the demo menu's photos — a restaurant's own photos appear here once the owner uploads them.</p>
+</div>
+</section>
+
+<section class="lp-fullbleed lp-section lp-section--white" id="how-it-works">
+<h2 class="reveal">How it works</h2>
+<p class="lp-section-sub reveal">Four steps, from the table to the kitchen, with no app in between.</p>
+<div class="lp-steps">
+<div class="lp-step reveal"><span class="lp-step-num">01</span><h3>Owner adds the menu</h3><p>Add items, prices and photos. Print the QR code for each table.</p></div>
+<div class="lp-step reveal"><span class="lp-step-num">02</span><h3>Customer scans</h3><p>The phone camera opens the menu for that exact table. No download, no account.</p></div>
+<div class="lp-step reveal"><span class="lp-step-num">03</span><h3>Kitchen sees it live</h3><p>Orders land on the kitchen display with their table number and any note.</p></div>
+<div class="lp-step reveal"><span class="lp-step-num">04</span><h3>Serve and bill</h3><p>Mark the order served, then bill it — UPI or cash — from the dashboard.</p></div>
+</div>
+</section>
+
+<section class="lp-fullbleed lp-section" id="features">
+<h2 class="reveal">What you get</h2>
+<p class="lp-section-sub reveal">Built for a small restaurant's real day, not for a demo video.</p>
+<div class="lp-grid">
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg></div><h3>QR menu per table</h3><p>One QR per table. The order already knows where it is going.</p></div>
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11h18M5 11V6M9 11V6M13 11V6M17 11V6M4 11l1 8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2l1-8"/></svg></div><h3>Kitchen display</h3><p>Live order list that refreshes on its own, with order age so nothing sits too long.</p></div>
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h14l-1 18-6 2-6-2L5 3z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div><h3>Simple billing</h3><p>Subtotal, 5% GST and total, with UPI or cash. A printable bill for the table.</p></div>
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><h3>Live order tracking</h3><p>Customers see Placed → Accepted → Preparing → Ready → Served, without asking a waiter.</p></div>
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><h3>Your UPI, your money</h3><p>The bill shows the restaurant's own UPI ID. TableTap never holds customer money in the MVP.</p></div>
+<div class="lp-card reveal"><div class="lp-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>No app, no login</h3><p>Customers order in the browser. Fewer steps between scanning and ordering.</p></div>
+</div>
+</section>
+
+<section class="lp-fullbleed lp-section lp-section--white" id="pricing">
+<h2 class="reveal">Pricing</h2>
+<p class="lp-section-sub reveal">Illustrative pricing for the project demo — not enforced in code yet. A restaurant pays a subscription; customers pay nothing extra.</p>
+<div class="lp-pricing">
+<div class="lp-price-card reveal"><span class="lp-price-tag">Starter</span><p class="lp-price">₹499<small>/month</small></p><ul><li>Up to 8 tables</li><li>QR menu and ordering</li><li>Basic billing</li></ul><a class="tt-btn tt-btn--outline" href="/signup/">Start with Starter</a></div>
+<div class="lp-price-card lp-price-card--hero reveal"><span class="lp-price-tag">Growth · Most popular</span><p class="lp-price">₹999<small>/month</small></p><ul><li>Unlimited tables</li><li>Kitchen display</li><li>UPI billing + daily report</li></ul><a class="tt-btn" href="/signup/">Start with Growth</a></div>
+<div class="lp-price-card reveal"><span class="lp-price-tag">Scale</span><p class="lp-price">₹1,999<small>/month</small></p><ul><li>Everything in Growth</li><li>Multi-outlet ready</li><li>Priority support</li></ul><a class="tt-btn tt-btn--outline" href="/signup/">Start with Scale</a></div>
+</div>
+<p class="lp-section-sub reveal" style="margin:24px auto 0">Annual: pay for 10 months, get 12. 14-day free trial on every plan. No commission on dine-in orders in the MVP.</p>
+</section>
+
+<section class="lp-fullbleed lp-section">
+<h2 class="reveal">Questions owners ask</h2>
+<div class="lp-faq reveal">
+<details><summary>Do customers need to install an app?</summary><p>No. The QR opens the menu in the phone browser. There is no download and no customer account.</p></details>
+<details><summary>What if a restaurant has no food photos yet?</summary><p>The menu still works — items show a clean placeholder tile with the dish initial until the owner uploads a photo from the menu page.</p></details>
+<details><summary>Is this for delivery?</summary><p>No. TableTap is dine-in only in the MVP: scan, order, serve, bill. No riders and no aggregator integration.</p></details>
+</div>
+</section>
+
+<section class="lp-fullbleed lp-cta">
+<h2 class="reveal">Put your menu on every table.</h2>
+<p class="reveal">Sign up, add your menu and photos, print your table QR codes.</p>
+<div class="lp-cta-row reveal" style="justify-content:center"><a class="tt-btn" href="/signup/">Create an owner account</a><a class="tt-btn tt-btn--outline" href="/login/">Log in</a></div>
+</section>
 {% endblock %}

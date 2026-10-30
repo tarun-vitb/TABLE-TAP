@@ -1,10 +1,27 @@
-{% extends "core/base.html" %}{% block content %}
-<h2>Your restaurants</h2><p><a class="btn btn-primary" href="/dashboard/restaurant/new/">+ New restaurant</a></p>
-{% for r in restaurants %}<div class="card"><div class="card-body"><h5>{{ r.name }}</h5>
-<a class="btn btn-sm btn-primary" href="/dashboard/{{ r.slug }}/">Dashboard</a>
-<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/menu/">Menu</a>
-<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/tables/">Tables & QR</a>
-<a class="btn btn-sm btn-outline-dark" href="/dashboard/{{ r.slug }}/kds/">Kitchen display</a>
-<a class="btn btn-sm btn-success" href="/r/{{ r.slug }}/">Customer menu</a></div></div>
-{% empty %}<p>No restaurants yet — create your first one.</p>{% endfor %}
+{% extends "core/base.html" %}{% block title %}Owner home — TableTap{% endblock %}{% block content %}
+<div class="ow-head">
+<div><h1>Welcome back, {{ user.username }}</h1><p>This is your owner home. Pick a restaurant to run its menu, tables, kitchen display and billing.</p></div>
+<a class="tt-btn" href="/dashboard/restaurant/new/">+ New restaurant</a>
+</div>
+{% if restaurants %}
+<div class="ow-grid">
+{% for r in restaurants %}<article class="ow-card">
+<h3>{{ r.name }}</h3>
+<p>{{ r.city }} · Plan {{ r.plan }} · {{ r.items.count }} menu items · {{ r.tables.count }} tables · {{ r.orders.count }} orders</p>
+<div class="ow-actions">
+<a class="tt-btn tt-btn--small" href="/dashboard/{{ r.slug }}/">Dashboard</a>
+<a class="tt-btn tt-btn--small tt-btn--outline" href="/dashboard/{{ r.slug }}/menu/">Menu &amp; photos</a>
+<a class="tt-btn tt-btn--small tt-btn--outline" href="/dashboard/{{ r.slug }}/tables/">Tables &amp; QR</a>
+<a class="tt-btn tt-btn--small tt-btn--outline" href="/dashboard/{{ r.slug }}/kds/">Kitchen display</a>
+<a class="tt-btn tt-btn--small tt-btn--outline" href="/r/{{ r.slug }}/">Customer menu</a>
+</div>
+</article>{% endfor %}
+</div>
+{% else %}
+<div class="ow-card">
+<h3>No restaurants yet</h3>
+<p>Create your first restaurant, add its menu and photos, then print a QR code for each table.</p>
+<a class="tt-btn" href="/dashboard/restaurant/new/">Create your first restaurant</a>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,4 +1,8 @@
-{% extends "core/base.html" %}{% block content %}
-<h2>Owner login</h2><p>Use the demo owner account created by the seed script, or create a superuser with <code>python manage.py createsuperuser</code>.</p>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Login</button></form>
+{% extends "core/base.html" %}{% block title %}Owner log in — TableTap{% endblock %}{% block content %}
+<div class="auth-card">
+<h1>Owner log in</h1>
+<p>Log in to reach your owner home and dashboard. Demo account (from the seed script): <strong>owner</strong> / <strong>owner123</strong>.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="tt-btn" style="width:100%">Log in</button></form>
+<p style="margin-top:16px">No account yet? <a href="/signup/">Sign up</a></p>
+</div>
 {% endblock %}
